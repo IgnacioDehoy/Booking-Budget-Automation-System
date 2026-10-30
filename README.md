@@ -18,7 +18,7 @@ Este sistema es la pieza de automatización de una colaboración más amplia con
 
 ## Lo que demuestra este proyecto
 
-- **Automatización de principio a fin**: de un formulario web a una reserva confirmada, sin intervención manual — captación, validación, cálculo, notificación y cobro.
+- **Automatización de principio a fin**: de una solicitud de presupuesto a una reserva confirmada, sin intervención manual — captación, validación, cálculo, notificación y cobro.
 - **Integración de varios sistemas**: Google Sheets como base de datos, Google Calendar para disponibilidad, Gmail y la API de Telegram Bot para notificaciones, todo orquestado desde un único backend.
 - **Lógica de negocio real**: cálculo de importes y desglose de IVA, control de aforo por franjas horarias, prevención de solapes de reserva.
 - **Buenas prácticas**: gestión de concurrencia con `LockService` para evitar condiciones de carrera, enlaces de acción firmados con hash para no exponer datos sensibles, configuración desacoplada del código vía `PropertiesService`.
@@ -26,18 +26,18 @@ Este sistema es la pieza de automatización de una colaboración más amplia con
 
 ## Contexto y problema
 
-El cliente recibía las solicitudes de presupuesto de team building a través de un formulario en su web, pero el seguimiento posterior (responder, bloquear la fecha, avisar al restaurante, calcular importes, cobrar) se hacía a mano por correo y WhatsApp. Esto generaba:
+El cliente recibía las solicitudes de presupuesto de team building a través de varios canales (correo, WhatsApp, un formulario de captación propio), y todo el seguimiento posterior —responder, bloquear la fecha, avisar al restaurante, calcular importes, cobrar— se hacía a mano. Esto generaba:
 
 - Solapes de reservas (dos grupos confirmando el mismo horario).
 - Presupuestos y fichas de reserva hechos a mano, propensos a errores.
 - Falta de visibilidad sobre importes pendientes de cobro.
 - Coordinación manual y lenta con el restaurante que sirve el catering.
 
-La solución final es una aplicación web (desplegada como *Web App* de Apps Script) que recibe las solicitudes del formulario, centraliza todo el ciclo de vida de la reserva en una hoja de Google Sheets, y automatiza las comunicaciones y los cálculos.
+La solución final es una aplicación web (desplegada como *Web App* de Apps Script) que recibe cada solicitud, centraliza todo el ciclo de vida de la reserva en una hoja de Google Sheets, y automatiza las comunicaciones y los cálculos.
 
 ## Funcionalidades
 
-- **Alta automática de solicitudes**: `doPost` recibe el formulario de la web, genera una fila en la hoja "Solicitudes" con todos los datos (sin duplicados por referencia) y dispara la sincronización con calendario y avisos.
+- **Alta automática de solicitudes**: `doPost` recibe cada solicitud (vía un formulario de captación propio, fuera del sitio principal), genera una fila en la hoja "Solicitudes" con todos los datos (sin duplicados por referencia) y dispara la sincronización con calendario y avisos.
 - **Seguimiento de estado**: cada solicitud pasa por `Pendiente → Aceptado / Rechazado / Cancelado`, con formato condicional en la hoja y flujo distinto para cada transición (confirmación por el cliente desde el correo, cambio manual en la hoja, modificación de la reserva, caducidad de pre-reservas sin confirmar, etc.).
 - **Comprobación de disponibilidad y choques de horario**: lógica de aforo por franjas horarias (`choque_`), teniendo en cuenta grupos grandes (que ocupan doble capacidad) y los días bloqueados manualmente o por eventos de todo el día en Google Calendar.
 - **Sincronización con Google Calendar**: cada solicitud crea/actualiza/borra un evento según su estado (`sincronizarFila_`), con colores distintos para pendiente y confirmado.
@@ -47,7 +47,7 @@ La solución final es una aplicación web (desplegada como *Web App* de Apps Scr
 - **Avisos por Telegram**: integración con la API de Telegram Bot para espejar cada correo relevante según el destinatario y el rol (colaborador / empresa / restaurante), usando `PropertiesService` para guardar el token del bot y el `chat_id` de cada persona.
 - **Flujo de pago**: enlaces únicos (con clave derivada por hash SHA-256) para marcar una reserva o un catering como pagado directamente desde el correo, sin necesidad de entrar a la hoja.
 - **Hoja compartida en tiempo real con la empresa y con el restaurante**: dos hojas de cálculo adicionales, de solo lectura salvo la columna de "Pago", que se regeneran automáticamente con cada cambio (incluye un resumen de facturación mensual con IVA desglosado).
-- **Reservas de "otros servicios"**: un pequeño formulario interno adicional para bloquear el calendario con reservas que no vienen de la web (alquiler de espacio, cumpleaños, etc.), para que la disponibilidad online las tenga en cuenta.
+- **Reservas de "otros servicios"**: un pequeño formulario interno adicional para bloquear el calendario con reservas que no vienen de ese canal (alquiler de espacio, cumpleaños, etc.), para que la disponibilidad online las tenga en cuenta.
 - **Página de "ficha de reserva" y acciones desde el correo**: confirmar, cancelar o modificar la reserva, y marcar pagos, todo servido como páginas HTML (`HtmlService`) sin necesidad de que el cliente tenga cuenta de Google.
 
 ## Stack técnico
@@ -77,7 +77,7 @@ El script no incluye ningún dato real: todos los identificadores sensibles se l
 
 | Propiedad | Para qué sirve |
 |---|---|
-| `TOKEN` | Token compartido entre el formulario de la web y `doPost`/`doGet`. |
+| `TOKEN` | Token compartido entre el formulario de captación y `doPost`/`doGet`. |
 | `CAL_ID` | ID del calendario de Google donde se crean los eventos de las reservas. |
 | `EXEC_URL` | URL de la Web App una vez implementada (se usa para generar los enlaces de los correos). |
 | `TELEGRAM_TOKEN` | Token del bot de Telegram, si se activan los avisos por Telegram. |
@@ -90,7 +90,7 @@ Pasos para desplegarlo desde cero:
 2. Ejecutar `setup()` una vez (crea las pestañas "Solicitudes" y "Resumen" con formato y fórmulas).
 3. Ejecutar `instalarCalendario()` y `instalarReservas()`.
 4. Rellenar las propiedades del script de la tabla anterior.
-5. Implementar el proyecto como aplicación web (acceso: cualquier usuario, incluso anónimo) y apuntar el formulario de la web al nuevo `EXEC_URL`.
+5. Implementar el proyecto como aplicación web (acceso: cualquier usuario, incluso anónimo) y apuntar el formulario de captación al nuevo `EXEC_URL`.
 
 ## Nota sobre este repositorio
 
