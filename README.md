@@ -11,7 +11,7 @@ Backend + frontend completo en **Google Apps Script**, construido como colaborad
 
 Este sistema es la pieza de automatización de una colaboración más amplia con el cliente, centrada en llevar su operativa de un modelo manual a uno basado en datos y procesos automatizados:
 
-- **Modernización web**: gestión y optimización de su sitio (multilingüe ES/CA/EN), mejorando rendimiento, estructura de contenidos y configuración técnica (CDN, hosting).
+- **Rediseño y modernización web**: rediseño completo del sitio (multilingüe ES/CA/EN), incluyendo el formulario de captación de solicitudes que alimenta este sistema — estructura, campos y flujo diseñados desde cero para automatizar lo que antes se gestionaba a mano.
 - **Automatización de procesos**: sustitución de un flujo manual por correo/WhatsApp (el que resuelve este repositorio) por un sistema que centraliza datos, calcula automáticamente y notifica a cada interesado.
 - **Datos como base de la operación**: toda la gestión de reservas, disponibilidad y facturación vive en una fuente de datos única (Google Sheets), con lógica de validación y cálculo en vez de hojas sueltas y copia manual.
 - **Identidad y comunicación digital**: trabajo de branding y materiales (identidad visual, QR, textos) que acompañan la transformación del negocio hacia lo digital.
@@ -26,7 +26,7 @@ Este sistema es la pieza de automatización de una colaboración más amplia con
 
 ## Contexto y problema
 
-El cliente recibía las solicitudes de presupuesto de team building a través de varios canales (correo, WhatsApp, un formulario de captación propio), y todo el seguimiento posterior —responder, bloquear la fecha, avisar al restaurante, calcular importes, cobrar— se hacía a mano. Esto generaba:
+El cliente recibía las solicitudes de presupuesto de team building a través de varios canales (correo, WhatsApp, y más tarde un formulario de captación propio, diseñado como parte del rediseño de la web), pero todo el seguimiento posterior —responder, bloquear la fecha, avisar al restaurante, calcular importes, cobrar— se hacía a mano. Esto generaba:
 
 - Solapes de reservas (dos grupos confirmando el mismo horario).
 - Presupuestos y fichas de reserva hechos a mano, propensos a errores.
@@ -37,7 +37,7 @@ La solución final es una aplicación web (desplegada como *Web App* de Apps Scr
 
 ## Funcionalidades
 
-- **Alta automática de solicitudes**: `doPost` recibe cada solicitud (vía un formulario de captación propio, fuera del sitio principal), genera una fila en la hoja "Solicitudes" con todos los datos (sin duplicados por referencia) y dispara la sincronización con calendario y avisos.
+- **Alta automática de solicitudes**: `doPost` recibe cada solicitud enviada desde el formulario de captación (diseñado y maquetado desde cero como parte del rediseño de la web), genera una fila en la hoja "Solicitudes" con todos los datos (sin duplicados por referencia) y dispara la sincronización con calendario y avisos.
 - **Seguimiento de estado**: cada solicitud pasa por `Pendiente → Aceptado / Rechazado / Cancelado`, con formato condicional en la hoja y flujo distinto para cada transición (confirmación por el cliente desde el correo, cambio manual en la hoja, modificación de la reserva, caducidad de pre-reservas sin confirmar, etc.).
 - **Comprobación de disponibilidad y choques de horario**: lógica de aforo por franjas horarias (`choque_`), teniendo en cuenta grupos grandes (que ocupan doble capacidad) y los días bloqueados manualmente o por eventos de todo el día en Google Calendar.
 - **Sincronización con Google Calendar**: cada solicitud crea/actualiza/borra un evento según su estado (`sincronizarFila_`), con colores distintos para pendiente y confirmado.
