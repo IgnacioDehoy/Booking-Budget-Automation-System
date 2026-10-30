@@ -5,7 +5,7 @@
 ![Google Sheets](https://img.shields.io/badge/Google%20Sheets-34A853?style=flat&logo=googlesheets&logoColor=white)
 ![Status](https://img.shields.io/badge/Estado-En%20producción-brightgreen)
 
-Backend + frontend completo en **Google Apps Script**, desarrollado como proyecto freelance para un cliente del sector turismo de aventura (actividades de team building para empresas, con catering a cargo de un restaurante colaborador). Lleva en producción desde octubre de 2026, procesando el flujo completo de reservas de un negocio real. El código de este repositorio es una versión **anonimizada**: se ha sustituido el nombre del cliente, sus datos de contacto, tokens y URLs por valores de ejemplo, manteniendo intacta toda la lógica de negocio.
+Backend + frontend completo en **Google Apps Script**, desarrollado como colaborador digital y automatizacion de procesos del sector turismo de aventura (actividades de team building para empresas, con catering a cargo de un restaurante colaborador). Lleva en producción desde octubre de 2026, procesando el flujo completo de reservas de un negocio real. El código de este repositorio es una versión **anonimizada**: se ha sustituido el nombre del cliente, sus datos de contacto, tokens y URLs por valores de ejemplo, manteniendo intacta toda la lógica de negocio.
 
 ## Lo que demuestra este proyecto
 
