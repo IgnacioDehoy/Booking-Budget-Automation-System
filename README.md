@@ -7,6 +7,18 @@
 
 Backend + frontend completo en **Google Apps Script**, construido como colaborador digital y de automatización de procesos para un cliente del sector turismo de aventura (actividades de team building para empresas, con catering a cargo de un restaurante colaborador). Lleva en producción desde octubre de 2026, procesando el flujo completo de reservas de un negocio real. El código de este repositorio es una versión **anonimizada**: se ha sustituido el nombre del cliente, sus datos de contacto, tokens y URLs por valores de ejemplo, manteniendo intacta toda la lógica de negocio.
 
+## Capturas
+
+Pantallas reales del sistema, con datos de ejemplo (sin ningún dato del cliente real):
+
+| Confirmación de reserva | Marcar como pagada |
+|---|---|
+| ![Página de confirmación](docs/screenshots/confirmacion.png) | ![Página de pago](docs/screenshots/pago.png) |
+
+| Ficha de reserva en PDF | Panel "Resumen" (Google Sheets) |
+|---|---|
+| ![Ficha PDF](docs/screenshots/ficha-pdf.png) | ![Resumen](docs/screenshots/resumen.png) |
+
 ## Colaboración de transformación digital
 
 Este sistema es la pieza de automatización de una colaboración más amplia con el cliente, centrada en llevar su operativa de un modelo manual a uno basado en datos y procesos automatizados:
@@ -94,4 +106,4 @@ Pasos para desplegarlo desde cero:
 
 ## Nota sobre este repositorio
 
-Este código se publica con fines de portfolio. Se ha mantenido toda la lógica y estructura original, pero se han sustituido el nombre de la empresa, el restaurante colaborador, direcciones, teléfonos, correos, tokens, IDs de calendario/hoja y URLs de despliegue por valores de ejemplo. No es un proyecto funcional "tal cual": necesita sus propias Propiedades del script y su propia hoja de cálculo para funcionar.
+Este código se publica con fines de portfolio. Se ha mantenido toda la lógica y estructura original, pero se han sustituido el nombre de la empresa, el restaurante colaborador, direcciones, teléfonos, correos, tokens, IDs de calendario/hoja y URLs de despliegue por valores de ejemplo. No es un proyecto funcional "tal cual": necesita sus propias Propiedades del script y su propia hoja de cálculo para funcionar. Las capturas reproducen fielmente las plantillas HTML y el panel del código real, renderizadas con datos de ejemplo para no mostrar información de ningún cliente.
