@@ -9,7 +9,7 @@ const SH = 'Solicitudes';
 const RS = 'Resumen';
 const HEAD = ['Fecha solicitud','Referencia','Estado','Empresa','Contacto','Email','Teléfono',
   'Fecha jornada','Fecha alternativa','Personas','Actividad','Presupuesto actividades (€)',
-  'Catering restaurante (€)','Total jornada (€)','Importe final actividades (€)','Comisión 10 % sin IVA (€)',
+  'Catering restaurante (€)','Total jornada (€)','Importe final actividades (€)','Importe de gestión (10 % sin IVA) (€)',
   'Factura','Detalle del presupuesto','Comentarios del cliente','Notas internas'];
 const VERDE = '#2d4a1e', NARANJA = '#e8704e', CREMA = '#f7f4ee';
 
@@ -50,7 +50,7 @@ function setup() {
   ]);
   s.getRange('B1').setNote('Referencia TB-… que recibe el cliente en su presupuesto');
   s.getRange('C1').setNote('Cambiar a "Aceptado" cuando el cliente confirme la reserva, o "Rechazado" si no.');
-  s.getRange('O1').setNote('Solo si el importe final de actividades es distinto del presupuesto. Si se deja vacío, la comisión se calcula sobre el presupuesto.');
+  s.getRange('O1').setNote('Solo si el importe final de actividades es distinto del presupuesto. Si se deja vacío, el importe de gestión se calcula sobre el presupuesto.');
   s.getRange('P1').setNote('Se calcula solo cuando el estado es "Aceptado".');
 
   // ---------- Resumen ----------
@@ -73,7 +73,7 @@ function setup() {
     ['Conversión (aceptadas / decididas)', '=IFERROR(C6/(C6+C8);0)', '0 %'],
     ['Importe presupuestado (actividades)', `=SUM(${S}L2:L)`, '#,##0.00 €'],
     ['Facturación aceptada (actividades)', `=SUM(${S}P2:P)*10`, '#,##0.00 €'],
-    ['Comisión 10 %', `=SUM(${S}P2:P)`, '#,##0.00 €']
+    ['Importe de gestión', `=SUM(${S}P2:P)`, '#,##0.00 €']
   ];
   kpis.forEach((k, i) => {
     const row = 5 + i;
@@ -87,7 +87,7 @@ function setup() {
   r.getRange('B5:C12').setVerticalAlignment('middle');
 
   // por mes
-  r.getRange('E4:H4').setValues([['Mes', 'Solicitudes', 'Aceptadas', 'Comisión']])
+  r.getRange('E4:H4').setValues([['Mes', 'Solicitudes', 'Aceptadas', 'Importe de gestión']])
     .setFontWeight('bold').setFontColor('#ffffff').setBackground(NARANJA).setHorizontalAlignment('center');
   r.getRange('E5').setFormula(`=IFERROR(SORT(UNIQUE(FILTER(TEXT(${S}A2:A;"yyyy-mm");${S}A2:A<>""));1;FALSE);"")`);
   for (let i = 5; i <= 28; i++) {
@@ -301,7 +301,7 @@ function asegurarColumnas_(s) {
   }
   if (s.getRange(1, C_.cat).getValue() !== 'Catering (restaurante)') {
     const ss = SpreadsheetApp.getActive();
-    s.getRange(1, C_.cat, 1, 4).setValues([['Catering (restaurante)', 'Comisión catering (€)', 'Datos (JSON)', 'Historial']])
+    s.getRange(1, C_.cat, 1, 4).setValues([['Catering (restaurante)', 'Importe de gestión catering (€)', 'Datos (JSON)', 'Historial']])
       .setFontWeight('bold').setFontColor('#ffffff').setBackground(VERDE).setHorizontalAlignment('center').setWrap(true);
     s.setColumnWidth(C_.cat, 300); s.setColumnWidth(C_.comcat, 120); s.setColumnWidth(C_.hist, 300);
     s.getRange('AA2:AA').setNumberFormat('#,##0.00 €');
@@ -314,11 +314,11 @@ function asegurarColumnas_(s) {
     rules.push(SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo('Cancelado').setBackground('#e6e3dd').setFontColor('#6d6a64').setStrikethrough(true).setRanges([s.getRange('C2:C')]).build());
     s.setConditionalFormatRules(rules);
     s.getRange('C1').setNote('Pendiente → el cliente aún no ha confirmado. Aceptado → confirmado (por el cliente o por ti). Rechazado → descartado por vosotros. Cancelado → cancelado por el cliente desde el correo.');
-    // fórmulas de comisión catering en filas existentes
+    // fórmulas de importe de gestión catering en filas existentes
     for (let r = 2; r <= s.getLastRow(); r++) s.getRange(r, C_.comcat).setFormulaR1C1(FCOMCAT_);
     // hoja Ajustes
     let a = ss.getSheetByName(AJ) || ss.insertSheet(AJ);
-    a.getRange('B2:C2').setValues([['% comisión catering (Restaurante Partner)', '']]);
+    a.getRange('B2:C2').setValues([['% importe de gestión catering (Restaurante Partner)', '']]);
     a.getRange('B3:C3').setValues([['Email del restaurante (avisos de reservas)', '']]);
     a.getRange('B5').setValue('Mientras no haya email del restaurante, los avisos "Para el restaurante" llegan a info@empresa-ejemplo.com para reenviarlos.').setFontColor('#6d6a64').setWrap(true);
     a.getRange('C2').setNumberFormat('0 %').setBackground('#fff8e1');
@@ -326,12 +326,12 @@ function asegurarColumnas_(s) {
     a.getRange('B2:B3').setFontWeight('bold').setFontColor(VERDE);
     a.setColumnWidth(1, 24); a.setColumnWidth(2, 380); a.setColumnWidth(3, 260);
     a.setHiddenGridlines(true);
-    // Resumen: comisión catering y total
+    // Resumen: importe de gestión catering y total
     const rs = ss.getSheetByName(RS);
     if (rs) {
-      rs.getRange('B13').setValue('Comisión catering').setFontColor('#3d3a35');
+      rs.getRange('B13').setValue('Importe de gestión catering').setFontColor('#3d3a35');
       rs.getRange('C13').setFormula('=SUM(Solicitudes!AA2:AA)').setNumberFormat('#,##0.00 €').setFontWeight('bold').setHorizontalAlignment('right');
-      rs.getRange('B14').setValue('Comisión total').setFontWeight('bold').setFontColor('#ffffff');
+      rs.getRange('B14').setValue('Importe de gestión total').setFontWeight('bold').setFontColor('#ffffff');
       rs.getRange('C14').setFormula('=C12+C13').setNumberFormat('#,##0.00 €').setFontWeight('bold').setHorizontalAlignment('right').setFontColor('#8dc63f').setFontSize(13);
       rs.getRange('B13:C13').setBackground(CREMA);
       rs.getRange('B14:C14').setBackground(VERDE);
@@ -357,16 +357,16 @@ function asegurarColumnas_(s) {
     s.setConditionalFormatRules(rules);
     const rs = SpreadsheetApp.getActive().getSheetByName(RS);
     if (rs) {
-      rs.getRange('B16').setValue('Comisión de reservas pagadas').setFontColor('#3d3a35');
+      rs.getRange('B16').setValue('Importe de gestión de reservas pagadas').setFontColor('#3d3a35');
       rs.getRange('C16').setFormula('=SUMIFS(Solicitudes!P2:P;Solicitudes!AF2:AF;"Pagado*")').setNumberFormat('#,##0.00 €').setFontWeight('bold').setHorizontalAlignment('right').setFontColor('#1e5631');
-      rs.getRange('B17').setValue('Comisión pendiente de cobro (confirmadas sin pagar)').setFontColor('#3d3a35');
+      rs.getRange('B17').setValue('Importe de gestión pendiente de cobro (confirmadas sin pagar)').setFontColor('#3d3a35');
       rs.getRange('C17').setFormula('=C12-C16').setNumberFormat('#,##0.00 €').setFontWeight('bold').setHorizontalAlignment('right').setFontColor('#b7791f');
       rs.getRange('B16:C17').setBackground(CREMA).setVerticalAlignment('middle');
       rs.setRowHeights(16, 2, 30);
     }
   }
 }
-/** Comisión de actividades: 10 % sobre la base SIN IVA (importe / 1,21) */
+/** Importe de gestión de actividades: 10 % sobre la base SIN IVA (importe / 1,21) */
 const IVA = 1.21;
 const FCOMACT_ = '=IF(RC3="Aceptado";ROUND(IF(RC15<>"";RC15;RC12)/1,21*0,1;2);"")';
 const FCOMCAT_ = '=IF(AND(RC3="Aceptado";Ajustes!R2C3<>"";RC13<>"");RC13*Ajustes!R2C3;"")';
@@ -595,7 +595,7 @@ function ficha_(r, cuando, tipo, estadoFicha) {
   try { return fichaPDF_(r, cuando, tipo, estadoFicha); } catch (err) { console.error(err); return null; }
 }
 
-/** Aviso a Adventure Co. (info@) y, por separado, a colaborador (con comisiones). Cada uno con su ficha PDF. */
+/** Aviso a Adventure Co. (info@) y, por separado, a colaborador (con el desglose de gestión). Cada uno con su ficha PDF. */
 function avisoMA_(r, titulo, intro, cuando, estadoFicha) {
   const pct = ajuste_('C2');
   const rest = Number(r[C_.rest - 1]) || 0;
@@ -607,8 +607,8 @@ function avisoMA_(r, titulo, intro, cuando, estadoFicha) {
     '\n\nActividades (Adventure Co.): ' + eur_(r[C_.total - 1]) +
     '\nCatering (Restaurante Partner): ' + (rest ? eur_(rest) + ' (base imponible ' + eur_(iv10_(rest)[0]) + ' · IVA 10 % ' + eur_(iv10_(rest)[1]) + ')' : '–') + (r[C_.cat - 1] ? '\n  ' + String(r[C_.cat - 1]).split(' · ').join('\n  ') : '') +
     '\nTotal jornada: ' + eur_(r[C_.jornada - 1]);
-  const com = '\n\nComisión actividades (10 % sin IVA): ' + eur_(Math.round(comAct * 100) / 100) +
-    '\nComisión catering: ' + (comCat === null ? (rest ? 'pendiente de definir el % en la hoja (pestaña Ajustes)' : '–') : eur_(Math.round(comCat * 100) / 100) + ' (' + Math.round(Number(pct) * 100) + ' %)');
+  const com = '\n\nImporte de gestión actividades (10 % sin IVA): ' + eur_(Math.round(comAct * 100) / 100) +
+    '\nImporte de gestión catering: ' + (comCat === null ? (rest ? 'pendiente de definir el % en la hoja (pestaña Ajustes)' : '–') : eur_(Math.round(comCat * 100) / 100) + ' (' + Math.round(Number(pct) * 100) + ' %)');
   const coment = r[C_.coment - 1] ? '\n\nComentarios del cliente: ' + r[C_.coment - 1] : '';
   const pie = estadoFicha ? '\n\nAdjunto: ficha de la reserva en PDF.' : '';
   const asunto = titulo + ' – ' + r[C_.ref - 1] + ' – ' + r[C_.empresa - 1];
@@ -691,7 +691,7 @@ function subRow_(lbl, val) {
 }
 function dato_(k, v) { return '<td style="padding:6px 8px;width:50%;vertical-align:top;border-bottom:1px solid ' + FV_.borde + '"><span style="font-size:7pt;color:' + FV_.gris + ';letter-spacing:.6px">' + k.toUpperCase() + '</span><br><span style="font-size:10.5pt">' + esc_(v || '–') + '</span></td>'; }
 
-/** tipo: 'ma' (Adventure Co.), 'colab' (con comisiones) o 'rest' (restaurante, solo catering) */
+/** tipo: 'ma' (Adventure Co.), 'colab' (con el desglose de gestión) o 'rest' (restaurante, solo catering) */
 function fichaPDF_(r, cuando, tipo, estado) {
   const L = lineasResumen_(r[C_.detalle - 1]);
   const rest = Number(r[C_.rest - 1]) || 0, tot = Number(r[C_.total - 1]) || 0;
@@ -710,7 +710,7 @@ function fichaPDF_(r, cuando, tipo, estado) {
     '<td style="padding:6px 4px 10px;width:50%;text-align:right;border-bottom:5px solid ' + FV_.orbar + '"><img src="' + LOGO_V + '" style="height:44px"></td></tr></table>' +
     '<table style="width:100%;border-collapse:collapse;margin-top:10px"><tr>' +
     '<td style="padding:4px"><span style="font-size:19pt;font-weight:bold;color:' + FV_.verde + '">' + (esRest ? 'Reserva de catering' : 'Ficha de reserva') + '</span><br>' +
-    '<span style="font-size:9pt;color:' + FV_.gris + '">' + (esRest ? 'Grupo de Adventure Co. · Restaurante Partner' : esColab ? 'Team building · copia del colaborador (con comisiones)' : 'Team building · Adventure Co.') + '</span></td>' +
+    '<span style="font-size:9pt;color:' + FV_.gris + '">' + (esRest ? 'Grupo de Adventure Co. · Restaurante Partner' : esColab ? 'Team building · copia del colaborador (con el desglose de gestión)' : 'Team building · Adventure Co.') + '</span></td>' +
     '<td style="padding:4px;text-align:right;vertical-align:top"><span style="font-size:12pt;font-weight:bold;color:' + FV_.or + '">' + esc_(r[C_.ref - 1]) + '</span><br><span style="font-size:8pt;color:' + FV_.gris + '">Generada: ' + hoy + '</span></td></tr></table>' +
     '<table style="width:100%;border-collapse:collapse;margin-top:10px"><tr><td style="border-left:6px solid ' + EB[0] + ';border-top:1px solid ' + EB[0] + ';border-bottom:1px solid ' + EB[0] + ';border-right:1px solid ' + EB[0] + ';padding:8px 12px">' +
     '<span style="color:' + EB[0] + ';font-weight:bold;font-size:12pt">' + EB[1] + '</span><br><span style="color:' + FV_.gris + ';font-size:8.5pt">' + EB[2] + '</span></td></tr></table>' +
@@ -743,9 +743,9 @@ function fichaPDF_(r, cuando, tipo, estado) {
   if (esColab) {
     const comAct = Math.round((Number(r[C_.final - 1]) || tot) / IVA * 0.1 * 100) / 100;
     const comCat = (pct !== '' && rest) ? Math.round(rest * Number(pct) * 100) / 100 : null;
-    h += h2_('COMISIONES · USO INTERNO', FV_.lima) + '<table style="width:100%;border-collapse:collapse;border-top:1px solid ' + FV_.borde + '">' +
-      subRow_('Comisión actividades (10 % sin IVA)', eur_(comAct)) +
-      subRow_('Comisión catering' + (comCat === null ? '' : ' (' + Math.round(Number(pct) * 100) + ' %)'), comCat === null ? (rest ? 'pendiente de definir' : '–') : eur_(comCat)) + '</table>';
+    h += h2_('IMPORTES DE GESTIÓN · USO INTERNO', FV_.lima) + '<table style="width:100%;border-collapse:collapse;border-top:1px solid ' + FV_.borde + '">' +
+      subRow_('Importe de gestión actividades (10 % sin IVA)', eur_(comAct)) +
+      subRow_('Importe de gestión catering' + (comCat === null ? '' : ' (' + Math.round(Number(pct) * 100) + ' %)'), comCat === null ? (rest ? 'pendiente de definir' : '–') : eur_(comCat)) + '</table>';
   }
   if (r[C_.coment - 1]) h += h2_(esRest ? 'ALERGIAS Y COMENTARIOS DEL GRUPO' : 'COMENTARIOS DEL CLIENTE') +
     '<table style="width:100%;border-collapse:collapse"><tr><td style="border-left:5px solid ' + FV_.or + ';padding:6px 12px;font-size:10pt">' + esc_(r[C_.coment - 1]) + '</td></tr></table>';
@@ -765,7 +765,7 @@ function probarFicha() {
   const v = s.getRange(row, 1, 1, C_.pagado).getValues()[0], d = s.getRange(row, 1, 1, C_.pagado).getDisplayValues()[0];
   const cuando = cuando_({ s: s, row: row, v: v, d: d });
   const a = fichaPDF_(v, cuando, 'ma', 'CONFIRMADA (prueba)'), b = fichaPDF_(v, cuando, 'rest', 'CONFIRMADA (prueba)'), c = fichaPDF_(v, cuando, 'colab', 'CONFIRMADA (prueba)');
-  MailApp.sendEmail({ to: 'colaborador@example.com', subject: 'Prueba de fichas PDF – ' + v[C_.ref - 1], body: 'Fichas PDF de prueba: Adventure Co., restaurante y la tuya (con comisiones).', name: 'Adventure Co. – Reservas', attachments: [a, b, c] });
+  MailApp.sendEmail({ to: 'colaborador@example.com', subject: 'Prueba de fichas PDF – ' + v[C_.ref - 1], body: 'Fichas PDF de prueba: Adventure Co., restaurante y la tuya (con el desglose de gestión).', name: 'Adventure Co. – Reservas', attachments: [a, b, c] });
 }
 
 /** Avisos cuando el estado se cambia a mano en la hoja */
@@ -944,7 +944,7 @@ function ejecutarPago(ref, key) {
     if (pag) return card_('Ya estaba marcada como pagada', esc_(pag) + '.', info, 'ok', false);
     if (String(F.v[C_.estado - 1]) !== 'Aceptado') return card_('La reserva no está confirmada', 'Solo se pueden marcar como pagadas las reservas confirmadas.', info, 'full', false);
     marcarPagado_(F, 'desde el correo');
-    return card_('¡Pago registrado!', 'La reserva ha quedado marcada como pagada y la comisión se ha actualizado en la hoja.', info, 'ok', false);
+    return card_('¡Pago registrado!', 'La reserva ha quedado marcada como pagada y el importe de gestión se ha actualizado en la hoja.', info, 'ok', false);
   } finally { lock.releaseLock(); syncMA_(); }
 }
 function marcarPagado_(F, via) {
@@ -954,7 +954,7 @@ function marcarPagado_(F, via) {
     const r = F.v, com = Math.round((Number(r[C_.final - 1]) || Number(r[C_.total - 1]) || 0) / IVA * 0.1 * 100) / 100;
     envio_('colaborador@example.com', '💶 Reserva PAGADA – ' + r[C_.ref - 1] + ' – ' + r[C_.empresa - 1],
       'Adventure Co. ha marcado la reserva como pagada (' + via + ').\n\nReferencia: ' + r[C_.ref - 1] + '\nEmpresa: ' + r[C_.empresa - 1] + '\nJornada: ' + cuando_(F) +
-      '\nActividades: ' + eur_(Number(r[C_.final - 1]) || Number(r[C_.total - 1]) || 0) + '\nComisión actividades (10 % sin IVA): ' + eur_(com) + '\n\nYa está sumada en la hoja (Resumen › Comisión de reservas pagadas).', null);
+      '\nActividades: ' + eur_(Number(r[C_.final - 1]) || Number(r[C_.total - 1]) || 0) + '\nImporte de gestión actividades (10 % sin IVA): ' + eur_(com) + '\n\nYa está sumada en la hoja (Resumen › Importe de gestión de reservas pagadas).', null);
 }
 
 
@@ -1062,7 +1062,7 @@ function crearHojaEmpresa() {
 }
 function sincronizarMA() {
   const PR = PropertiesService.getScriptProperties();
-  if (!PR.getProperty('COM_SIN_IVA')) { PR.setProperty('COM_SIN_IVA', '1'); comisionSinIVA(); return; }
+  if (!PR.getProperty('IMPORTE_GESTION_SIN_IVA')) { PR.setProperty('IMPORTE_GESTION_SIN_IVA', '1'); importeGestionSinIVA(); return; }
   if (!PR.getProperty('V18')) { PR.setProperty('V18', '1'); actualizarV18(); }
   if (!PR.getProperty('V22')) { PR.setProperty('V22', '1'); instalarTareasDiarias(); }
   if (!PR.getProperty('V25')) { PR.setProperty('V25', '1'); crearHojaRestaurante(); }
@@ -1129,13 +1129,13 @@ function alEditarMA(e) {
   } finally { lock.releaseLock(); syncMA_(); }
 }
 
-/** Ejecutar una vez: pasa la comisión de actividades a 10 % sobre la base sin IVA en todas las filas. */
-function comisionSinIVA() {
+/** Ejecutar una vez: pasa el importe de gestión de actividades a 10 % sobre la base sin IVA en todas las filas. */
+function importeGestionSinIVA() {
   const ss = main_(), s = ss.getSheetByName(SH);
-  s.getRange(1, 16).setValue('Comisión 10 % sin IVA (€)');
+  s.getRange(1, 16).setValue('Importe de gestión (10 % sin IVA) (€)');
   for (let r = 2; r <= s.getLastRow(); r++) if (s.getRange(r, C_.ref).getValue()) s.getRange(r, 16).setFormulaR1C1(FCOMACT_);
   const rs = ss.getSheetByName(RS);
-  if (rs) rs.createTextFinder('Comisión 10 %').matchEntireCell(true).findAll().forEach(c => c.setValue('Comisión actividades (10 % sin IVA)'));
+  if (rs) rs.createTextFinder('Importe de gestión').matchEntireCell(true).findAll().forEach(c => c.setValue('Importe de gestión actividades (10 % sin IVA)'));
   s.getRange('P1').setNote('10 % sobre el importe de actividades SIN IVA (importe ÷ 1,21). Usa "Importe final actividades" si está relleno; si no, el presupuesto.');
   syncMA_();
 }
@@ -1724,11 +1724,11 @@ function tgEspejo_(to, asunto, cuerpo) {
   asunto = String(asunto || ''); const t = asunto + '\n\n' + String(cuerpo || '');
   const para = String(to || '').toLowerCase().trim();
   const destRest = String(ajuste_('C3') || '').toLowerCase().trim();
-  const sinComision = x => x.split('\n').filter(l => !/Comisi[oó]n/i.test(l)).join('\n');
+  const sinImporteGestion = x => x.split('\n').filter(l => !/Importe de gesti[oó]n/i.test(l)).join('\n');
   if (para === 'colaborador@example.com') {
     tgEnviar_('colab', t);
-    if (/^(💶|🍽️💶|↩️)/.test(asunto)) tgEnviar_('empresa', sinComision(t));        // pagos y pagos desmarcados
-    if (/^(🍽️💶|↩️ Catering)/.test(asunto)) tgEnviar_('restaurante', sinComision(t)); // catering pagado / desmarcado
+    if (/^(💶|🍽️💶|↩️)/.test(asunto)) tgEnviar_('empresa', sinImporteGestion(t));        // pagos y pagos desmarcados
+    if (/^(🍽️💶|↩️ Catering)/.test(asunto)) tgEnviar_('restaurante', sinImporteGestion(t)); // catering pagado / desmarcado
   } else if (/^🍽️/.test(asunto) || (destRest && para === destRest)) {
     tgEnviar_('restaurante', t);                                                      // avisos de comida al restaurante
   } else if (para === 'info@empresa-ejemplo.com') {

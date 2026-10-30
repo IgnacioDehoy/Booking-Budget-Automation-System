@@ -5,23 +5,32 @@
 ![Google Sheets](https://img.shields.io/badge/Google%20Sheets-34A853?style=flat&logo=googlesheets&logoColor=white)
 ![Status](https://img.shields.io/badge/Estado-En%20producción-brightgreen)
 
-Backend + frontend completo en **Google Apps Script**, desarrollado como proyecto freelance para un cliente del sector turismo de aventura (actividades de team building para empresas, con catering a cargo de un restaurante colaborador). Lleva en producción desde octubre de 2026, procesando el flujo completo de reservas de un negocio real. El código de este repositorio es una versión **anonimizada**: se ha sustituido el nombre del cliente, sus datos de contacto, tokens y URLs por valores de ejemplo, manteniendo intacta toda la lógica de negocio.
+Backend + frontend completo en **Google Apps Script**, construido como parte de una **colaboración de transformación digital** con un cliente del sector turismo de aventura (actividades de team building para empresas, con catering a cargo de un restaurante colaborador). Lleva en producción desde octubre de 2026, procesando el flujo completo de reservas de un negocio real. El código de este repositorio es una versión **anonimizada**: se ha sustituido el nombre del cliente, sus datos de contacto, tokens y URLs por valores de ejemplo, manteniendo intacta toda la lógica de negocio.
+
+## Colaboración de transformación digital
+
+Este sistema es la pieza de automatización de una colaboración más amplia con el cliente, centrada en llevar su operativa de un modelo manual a uno basado en datos y procesos automatizados:
+
+- **Modernización web**: gestión y optimización de su sitio (multilingüe ES/CA/EN), mejorando rendimiento, estructura de contenidos y configuración técnica (CDN, hosting).
+- **Automatización de procesos**: sustitución de un flujo manual por correo/WhatsApp (el que resuelve este repositorio) por un sistema que centraliza datos, calcula automáticamente y notifica a cada interesado.
+- **Datos como base de la operación**: toda la gestión de reservas, disponibilidad y facturación vive en una fuente de datos única (Google Sheets), con lógica de validación y cálculo en vez de hojas sueltas y copia manual.
+- **Identidad y comunicación digital**: trabajo de branding y materiales (identidad visual, QR, textos) que acompañan la transformación del negocio hacia lo digital.
 
 ## Lo que demuestra este proyecto
 
 - **Automatización de principio a fin**: de un formulario web a una reserva confirmada, sin intervención manual — captación, validación, cálculo, notificación y cobro.
 - **Integración de varios sistemas**: Google Sheets como base de datos, Google Calendar para disponibilidad, Gmail y la API de Telegram Bot para notificaciones, todo orquestado desde un único backend.
-- **Lógica de negocio real**: cálculo de comisiones y desglose de IVA, control de aforo por franjas horarias, prevención de solapes de reserva.
+- **Lógica de negocio real**: cálculo de importes y desglose de IVA, control de aforo por franjas horarias, prevención de solapes de reserva.
 - **Buenas prácticas**: gestión de concurrencia con `LockService` para evitar condiciones de carrera, enlaces de acción firmados con hash para no exponer datos sensibles, configuración desacoplada del código vía `PropertiesService`.
 - **Diseño pensado para el usuario final**: páginas y correos generados sin que el cliente necesite cuenta de Google ni conocimientos técnicos.
 
 ## Contexto y problema
 
-El cliente recibía las solicitudes de presupuesto de team building a través de un formulario en su web, pero el seguimiento posterior (responder, bloquear la fecha, avisar al restaurante, calcular comisiones, cobrar) se hacía a mano por correo y WhatsApp. Esto generaba:
+El cliente recibía las solicitudes de presupuesto de team building a través de un formulario en su web, pero el seguimiento posterior (responder, bloquear la fecha, avisar al restaurante, calcular importes, cobrar) se hacía a mano por correo y WhatsApp. Esto generaba:
 
 - Solapes de reservas (dos grupos confirmando el mismo horario).
 - Presupuestos y fichas de reserva hechos a mano, propensos a errores.
-- Falta de visibilidad sobre comisiones pendientes de cobro.
+- Falta de visibilidad sobre importes pendientes de cobro.
 - Coordinación manual y lenta con el restaurante que sirve el catering.
 
 La solución final es una aplicación web (desplegada como *Web App* de Apps Script) que recibe las solicitudes del formulario, centraliza todo el ciclo de vida de la reserva en una hoja de Google Sheets, y automatiza las comunicaciones y los cálculos.
@@ -32,9 +41,9 @@ La solución final es una aplicación web (desplegada como *Web App* de Apps Scr
 - **Seguimiento de estado**: cada solicitud pasa por `Pendiente → Aceptado / Rechazado / Cancelado`, con formato condicional en la hoja y flujo distinto para cada transición (confirmación por el cliente desde el correo, cambio manual en la hoja, modificación de la reserva, caducidad de pre-reservas sin confirmar, etc.).
 - **Comprobación de disponibilidad y choques de horario**: lógica de aforo por franjas horarias (`choque_`), teniendo en cuenta grupos grandes (que ocupan doble capacidad) y los días bloqueados manualmente o por eventos de todo el día en Google Calendar.
 - **Sincronización con Google Calendar**: cada solicitud crea/actualiza/borra un evento según su estado (`sincronizarFila_`), con colores distintos para pendiente y confirmado.
-- **Cálculo de presupuesto y comisiones**: fórmulas en la propia hoja para la comisión sobre actividades (10 % sobre base sin IVA) y sobre el catering (% configurable), con desglose de IVA (21 % actividades, 10 % catering).
-- **Generación de fichas en PDF**: tres variantes (cliente/empresa, colaborador con comisiones, restaurante solo con el catering), generadas a partir de una plantilla HTML y convertidas a PDF con `Utilities.newBlob(...).getAs(MimeType.PDF)`.
-- **Enrutado de notificaciones a varios destinatarios**: avisos por correo (y, opcionalmente, por Telegram) a la empresa, al colaborador externo y al restaurante, cada uno con la información que le corresponde (el restaurante, por ejemplo, nunca ve las comisiones).
+- **Cálculo de presupuesto**: fórmulas en la propia hoja para el importe de gestión sobre actividades (porcentaje configurable sobre base sin IVA) y sobre el catering (% configurable), con desglose de IVA (21 % actividades, 10 % catering).
+- **Generación de fichas en PDF**: tres variantes (cliente/empresa, colaborador con el desglose de gestión, restaurante solo con el catering), generadas a partir de una plantilla HTML y convertidas a PDF con `Utilities.newBlob(...).getAs(MimeType.PDF)`.
+- **Enrutado de notificaciones a varios destinatarios**: avisos por correo (y, opcionalmente, por Telegram) a la empresa, al colaborador externo y al restaurante, cada uno con la información que le corresponde (el restaurante, por ejemplo, nunca ve los importes de gestión).
 - **Avisos por Telegram**: integración con la API de Telegram Bot para espejar cada correo relevante según el destinatario y el rol (colaborador / empresa / restaurante), usando `PropertiesService` para guardar el token del bot y el `chat_id` de cada persona.
 - **Flujo de pago**: enlaces únicos (con clave derivada por hash SHA-256) para marcar una reserva o un catering como pagado directamente desde el correo, sin necesidad de entrar a la hoja.
 - **Hoja compartida en tiempo real con la empresa y con el restaurante**: dos hojas de cálculo adicionales, de solo lectura salvo la columna de "Pago", que se regeneran automáticamente con cada cambio (incluye un resumen de facturación mensual con IVA desglosado).
